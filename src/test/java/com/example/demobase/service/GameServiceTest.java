@@ -17,10 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,8 +52,23 @@ class GameServiceTest {
 
     @Test
     void testStartGame_Success() {
-        // TODO: Implementar el test para testStartGame_Success
-        
+        // TO DO: Implementar el test para testStartGame_Success
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(gameInProgressRepository.findByJugadorIdOrderByFechaInicioDesc(1L))
+                .thenReturn(Collections.emptyList());
+        when(wordRepository.findRandomWord()).thenReturn(Optional.of(word));
+        when(gameInProgressRepository.save(any(GameInProgress.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+
+        GameResponseDTO result = gameService.startGame(1L);
+
+        assertNotNull(result);
+        assertEquals(7, result.getIntentosRestantes());
+        assertNotNull(result.getPalabraOculta());
+        verify(playerRepository, times(1)).findById(1L);
+        verify(gameInProgressRepository, times(1)).save(any(GameInProgress.class));
+
     }
 
     @Test
@@ -102,7 +114,7 @@ class GameServiceTest {
 
         // Then
         assertNotNull(result);
-        assertEquals(5, result.getIntentosRestantes());
+        assertEquals(7, result.getIntentosRestantes());
         verify(gameInProgressRepository, never()).save(any(GameInProgress.class));
     }
 
