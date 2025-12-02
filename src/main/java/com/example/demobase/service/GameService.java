@@ -33,6 +33,7 @@ public class GameService {
     
     @Transactional
     public GameResponseDTO startGame(Long playerId) {
+
         GameResponseDTO response = new GameResponseDTO();
         // TO DO: Implementar el método startGame
         // Validar que el jugador existe
@@ -40,20 +41,28 @@ public class GameService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("No se ha encontrado un jugador con ese ID"));
 
-
         // Verificar si ya existe una partida en curso para este jugador y palabra
         List<GameInProgress> partidas = gameInProgressRepository.findByJugadorIdOrderByFechaInicioDesc(playerId);
+
+        if (partidas == null) {
+            partidas = Collections.emptyList();
+        }
 
         if (!partidas.isEmpty()) {
             GameInProgress partidaActiva = partidas.get(0);
             if (partidaActiva.getIntentosRestantes() > 0) {
+
+                partidaActiva.setIntentosRestantes(MAX_INTENTOS);
+
                 return buildResponseFromGameInProgress(partidaActiva);
+            } else {
+                gameInProgressRepository.delete(partidaActiva);
             }
         }
 
         // Crear nueva partida en curso
         Optional<Word> word = wordRepository.findRandomWord();
-        if(word.isEmpty()){
+        if (word.isEmpty()) {
             throw new RuntimeException("no hay palabras disponibles");
         }
 
@@ -67,6 +76,7 @@ public class GameService {
         gameInProgressRepository.save(game);
 
         return buildResponseFromGameInProgress(game);
+
     }
     
     @Transactional
